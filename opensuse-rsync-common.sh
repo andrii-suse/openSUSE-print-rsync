@@ -16,36 +16,36 @@ has_numfmt=0
 #    exit 1
 # )
 
-PROJECT_TUMBLEWEED="${OPENSUE_RSYNC_PROJECT_TUMBLEWEED:-0}"
-PROJECT_TUMBLEWEED_ISO="${OPENSUE_RSYNC_PROJECT_TUMBLEWEED_ISO:-1}"
-PROJECT_TUMBLEWEED_REPO="${OPENSUE_RSYNC_PROJECT_TUMBLEWEED_REPO:-0}"
-PROJECT_TUMBLEWEED_UPDATE="${OPENSUE_RSYNC_PROJECT_TUMBLEWEED_UPDATE:-0}"
-PROJECT_TUMBLEWEED_SOURCE="${OPENSUE_RSYNC_PROJECT_TUMBLEWEED_SOURCE:-0}"
-PROJECT_TUMBLEWEED_DEBUG="${OPENSUE_RSYNC_PROJECT_TUMBLEWEED_DEBUG:-0}"
-PROJECT_TUMBLEWEED_HISTORY="${OPENSUE_RSYNC_PROJECT_TUMBLEWEED_HISTORY:-0}"
+PROJECT_TUMBLEWEED="${OPENSUSE_RSYNC_PROJECT_TUMBLEWEED:-0}"
+PROJECT_TUMBLEWEED_ISO="${OPENSUSE_RSYNC_PROJECT_TUMBLEWEED_ISO:-1}"
+PROJECT_TUMBLEWEED_REPO="${OPENSUSE_RSYNC_PROJECT_TUMBLEWEED_REPO:-0}"
+PROJECT_TUMBLEWEED_UPDATE="${OPENSUSE_RSYNC_PROJECT_TUMBLEWEED_UPDATE:-0}"
+PROJECT_TUMBLEWEED_SOURCE="${OPENSUSE_RSYNC_PROJECT_TUMBLEWEED_SOURCE:-0}"
+PROJECT_TUMBLEWEED_DEBUG="${OPENSUSE_RSYNC_PROJECT_TUMBLEWEED_DEBUG:-0}"
+PROJECT_TUMBLEWEED_HISTORY="${OPENSUSE_RSYNC_PROJECT_TUMBLEWEED_HISTORY:-0}"
 
-PROJECT_LEAP_156="${OPENSUE_RSYNC_PROJECT_LEAP_156:-0}"
-PROJECT_LEAP_156_ISO="${OPENSUE_RSYNC_PROJECT_LEAP_156_ISO:-0}"
-PROJECT_LEAP_156_REPO="${OPENSUE_RSYNC_PROJECT_LEAP_156_REPO:-0}"
-PROJECT_LEAP_156_UPDATE="${OPENSUE_RSYNC_PROJECT_LEAP_156_UPDATE:-0}"
-PROJECT_LEAP_156_PORT="${OPENSUE_RSYNC_PROJECT_LEAP_156_PORT:-0}"
-PROJECT_LEAP_156_SOURCE="${OPENSUE_RSYNC_PROJECT_LEAP_156_SOURCE:-0}"
-PROJECT_LEAP_156_DEBUG="${OPENSUE_RSYNC_PROJECT_LEAP_156_DEBUG:-0}"
+PROJECT_LEAP_156="${OPENSUSE_RSYNC_PROJECT_LEAP_156:-0}"
+PROJECT_LEAP_156_ISO="${OPENSUSE_RSYNC_PROJECT_LEAP_156_ISO:-0}"
+PROJECT_LEAP_156_REPO="${OPENSUSE_RSYNC_PROJECT_LEAP_156_REPO:-0}"
+PROJECT_LEAP_156_UPDATE="${OPENSUSE_RSYNC_PROJECT_LEAP_156_UPDATE:-0}"
+PROJECT_LEAP_156_PORT="${OPENSUSE_RSYNC_PROJECT_LEAP_156_PORT:-0}"
+PROJECT_LEAP_156_SOURCE="${OPENSUSE_RSYNC_PROJECT_LEAP_156_SOURCE:-0}"
+PROJECT_LEAP_156_DEBUG="${OPENSUSE_RSYNC_PROJECT_LEAP_156_DEBUG:-0}"
 
-PROJECT_LEAP_155="${OPENSUE_RSYNC_PROJECT_LEAP_155:-0}"
-PROJECT_LEAP_155_ISO="${OPENSUE_RSYNC_PROJECT_LEAP_155_ISO:-0}"
-PROJECT_LEAP_155_REPO="${OPENSUE_RSYNC_PROJECT_LEAP_155_REPO:-0}"
-PROJECT_LEAP_155_UPDATE="${OPENSUE_RSYNC_PROJECT_LEAP_155_UPDATE:-0}"
-PROJECT_LEAP_155_PORT="${OPENSUE_RSYNC_PROJECT_LEAP_155_PORT:-0}"
-PROJECT_LEAP_155_SOURCE="${OPENSUE_RSYNC_PROJECT_LEAP_155_SOURCE:-0}"
-PROJECT_LEAP_155_DEBUG="${OPENSUE_RSYNC_PROJECT_LEAP_155_DEBUG:-0}"
+PROJECT_LEAP_155="${OPENSUSE_RSYNC_PROJECT_LEAP_155:-0}"
+PROJECT_LEAP_155_ISO="${OPENSUSE_RSYNC_PROJECT_LEAP_155_ISO:-0}"
+PROJECT_LEAP_155_REPO="${OPENSUSE_RSYNC_PROJECT_LEAP_155_REPO:-0}"
+PROJECT_LEAP_155_UPDATE="${OPENSUSE_RSYNC_PROJECT_LEAP_155_UPDATE:-0}"
+PROJECT_LEAP_155_PORT="${OPENSUSE_RSYNC_PROJECT_LEAP_155_PORT:-0}"
+PROJECT_LEAP_155_SOURCE="${OPENSUSE_RSYNC_PROJECT_LEAP_155_SOURCE:-0}"
+PROJECT_LEAP_155_DEBUG="${OPENSUSE_RSYNC_PROJECT_LEAP_155_DEBUG:-0}"
 
-PROJECT_SLOWROLL="${OPENSUE_RSYNC_PROJECT_SLOWROLL:-0}"
-PROJECT_SLOWROLL_ISO="${OPENSUE_RSYNC_PROJECT_SLOWROLL_ISO:-0}"
-PROJECT_SLOWROLL_REPO="${OPENSUE_RSYNC_PROJECT_SLOWROLL_REPO:-0}"
-PROJECT_SLOWROLL_UPDATE="${OPENSUE_RSYNC_PROJECT_SLOWROLL_UPDATE:-0}"
+PROJECT_SLOWROLL="${OPENSUSE_RSYNC_PROJECT_SLOWROLL:-0}"
+PROJECT_SLOWROLL_ISO="${OPENSUSE_RSYNC_PROJECT_SLOWROLL_ISO:-0}"
+PROJECT_SLOWROLL_REPO="${OPENSUSE_RSYNC_PROJECT_SLOWROLL_REPO:-0}"
+PROJECT_SLOWROLL_UPDATE="${OPENSUSE_RSYNC_PROJECT_SLOWROLL_UPDATE:-0}"
 
-PROJECT_REPOSITORIES="${OPENSUE_RSYNC_PROJECT_REPOSITORIES:-0}"
+PROJECT_REPOSITORIES="${OPENSUSE_RSYNC_PROJECT_REPOSITORIES:-0}"
 
 declare -A paths
 paths[tw-iso]=/tumbleweed/iso
@@ -74,7 +74,6 @@ paths[sr-update]=/update/slowroll
 
 paths[repositories]=/repositories
 
-projects=()
 
 set -ae
 test ! -r "${config}" || source ${config}
@@ -105,6 +104,8 @@ test 0 == "${PROJECT_SLOWROLL_ISO:${PROJECT_SLOWROLL:0}}" || projects+=( sr-iso 
 test 0 == "${PROJECT_SLOWROLL_REPO:${PROJECT_SLOWROLL:0}}" || projects+=( sr-repo )
 test 0 == "${PROJECT_SLOWROLL_UPDATE:${PROJECT_SLOWROLL:0}}" || projects+=( sr-update )
 
+test 0 == "${PROJECT_REPOSITORIES:0}" || projects+=( repositories )
+
 address="${OPENSUSE_RSYNC_ADDRESS:-${RSYNC_ADDRESS:-rsync://stage3.opensuse.org/opensuse-full-really-everything/opensuse/}}"
 last_modified_url=${LAST_MODIFIED_URL:-http://download.opensuse.org/rest/project_last_modified}
 disk_usage_url=${DISK_USAGE_URL:-http://download.opensuse.org/rest/project_disk_usage}
@@ -117,61 +118,30 @@ cachedir="${OPENSUSE_RSYNC_CACHE_DIR:-${CACHE_DIR:-.}}"
 lockdir="${OPENSUSE_RSYNC_LOCK_DIR:-${LOCK_DIR:-.}}"
 logdir="${OPENSUSE_RSYNC_LOG_DIR:-${LOG_DIR:-.}}"
 
-set -euo pipefail
+_validate_project() {
+    local proj=$1
+    local path=${paths[${proj}]}
+    test "$path" != "" || (
+        >&2 echo "Unknown project $proj, expected one of";
+        for i in "${!paths[@]}"; do
+            >&2 echo -n " $i"
+        done
+        >&2 echo ""
+        exit 1
+    )
+}
 
-du_total=0
-du_unknown_projects=""
-
-for proj in ${projects[@]}; do
-    cachefile=$cachedir/opensuse-rsync-$proj.mtime
-    lockfile=$lockdir/opensuse-rsync-$proj.lock
-    logfile=$logdir/opensuse-rsync-$proj.log
-    name=$proj
-    name=${name//tw/TW}
-    name=${name//sr/SR}
-    name=${name//lp/}
-    name=${name//15/15.}
-    name=${name//16/16.}
-    name=${name//-/+}
-
-    ## check last sync
-    ##
-    last_sync=$(cat $cachefile 2>/dev/null) || :
-    last_change=''
-    test -z "$last_modified_url" || last_change=$(curl -s $last_modified_url?project=$name)
-
-    test "${last_change}" -eq "${last_change}" 2> /dev/null || last_change=
-
-    test "${last_sync:-0}" != "${last_change:-1}" || {
-        echo echo skipping $proj because up to date
-        continue
-    }
-    path=${paths[${proj}]}
-    test "$path" != "" || continue
-    #
-    ##
-
-    ## check disk usage
-    #
-    disk_usage=
-    test -z "$disk_usage_url" || disk_usage=$(curl -s $disk_usage_url?project=$name)
-    du_text='Unknown'
-    if test "${disk_usage:-0}" -eq "${disk_usage:-1}" 2>/dev/null && test "${disk_usage}" -gt 0; then
-        du_total=$(($du_total + $disk_usage))
-        du_text=$disk_usage
-        test "$has_numfmt" != 1 || du_text=$(numfmt --to=iec $disk_usage)
-    else
-        du_unknown_projects="$du_unknown_projects $proj"
-    fi
-    #
-    ##
-
+function print_project() {
+    local proj=$1
+    _validate_project $proj
+    shift
+    local path=${paths[${proj}]}
     ## generate --include paramaters
     #
-    topdir="$path"
-    name="$(dirname "$topdir")"
+    local topdir="$path"
+    local name="$(dirname "$topdir")"
 
-    includes="--include='$path/***' --exclude='*'"
+    local includes="--include='$path/***' --exclude='*'"
 
     while [ "$topdir" != "/" ] && [ "$topdir" != '.' ] && [ "$topdir" != "" ]; do
         name="$topdir"
@@ -184,17 +154,25 @@ for proj in ${projects[@]}; do
     ## print rsync
     #
     (
-        echo "echo -- starting asynchronous sync of $proj, expected disk usage $du_text. Refer $logfile for details..."
-        echo "flock -n $lockfile rsync $xtra $params $includes \"$address\"" "$@" ">> $logfile 2>&1  & echo ${last_change:-unknown} > $cachefile"
-        echo
+        echo "rsync $xtra $params $includes \"$address\"" "$@"
     )
-    #
-    ##
-done
-
-test "$du_total" -le 0 || {
-    test "$has_numfmt" != 1 || du_total=$(numfmt --to=iec $du_total)
-    echo "echo total expected disk usage: $du_total"
 }
 
-test -z "$du_unknown_projects" || echo "echo Projects with unknown disk usage: $du_unknown_projects"
+function print_project_if_needed() {
+    local proj=$1
+    _validate_project $proj
+    local cachefile=$cachedir/opensuse-rsync-$proj.mtime
+    local name=$proj
+    name=${name//tw/TW}
+    name=${name//sr/SR}
+    name=${name//lp/}
+    name=${name//15/15.}
+    name=${name//16/16.}
+    name=${name//-/+}
+
+    if test -n "$last_modified_url"; then
+        echo -n "test \$(cat \"$cachefile\" 2>/dev/null) == \$(curl -s $last_modified_url?project=$name | tee $cachefile ) || "
+    fi
+    print_project "$@"
+}
+

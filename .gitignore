@@ -1,1 +1,3 @@
-/opensuse-rsync*
+/opensuse-rsync*.log
+/opensuse-rsync*.mtime
+/opensuse-rsync*.cache
