@@ -1,0 +1,14 @@
+[Unit]
+Description=rsync openSUSE project %i to this machine
+After=network-online.target nss-lookup.target
+
+[Service]
+User=opensuse-rsync
+Group=opensuse-rsync
+Type=oneshot
+ExecStart=/bin/bash -c '/usr/bin/opensuse-rsync-print-project-if-needed %i /srv/opensuse | bash '
+EnvironmentFile=-/etc/opensuse-rsync.env
+WorkingDirectory=/var/lib/opensuse-rsync
+
+[Install]
+WantedBy=multi-user.target

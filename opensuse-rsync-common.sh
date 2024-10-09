@@ -1,4 +1,6 @@
-config=${OPENSUSE_RSYNC_CONFIG_FILE}
+#!/bin/bash -e
+
+config="${OPENSUSE_RSYNC_CONFIG_FILE:-''}"
 
 test -n "${config}" || {
     if [ -r ./openSUSE-print-rsync.env ]; then
@@ -7,6 +9,8 @@ test -n "${config}" || {
         config=/etc/openSUSE-print-rsync.env
     fi
 }
+
+RSYNC_EXTRA_PARAMS="${RSYNC_EXTRA_PARAMS:-''}"
 
 has_numfmt=0
 ( which numfmt >& /dev/null || : ) && has_numfmt=1
@@ -110,7 +114,7 @@ address="${OPENSUSE_RSYNC_ADDRESS:-${RSYNC_ADDRESS:-rsync://stage3.opensuse.org/
 last_modified_url=${LAST_MODIFIED_URL:-http://download.opensuse.org/rest/project_last_modified}
 disk_usage_url=${DISK_USAGE_URL:-http://download.opensuse.org/rest/project_disk_usage}
 
-deflt_params="-L -r -t -v"
+deflt_params="-L -r -t --info=skip0"
 params="${OPENSUSE_RSYNC_PARAMS:-${RSYNC_PARAMS:-$deflt_params}}"
 xtra="${OPENSUSE_RSYNC_EXTRA_PARAMS:-${RSYNC_EXTRA_PARAMS}}"
 
@@ -120,6 +124,7 @@ logdir="${OPENSUSE_RSYNC_LOG_DIR:-${LOG_DIR:-.}}"
 
 _validate_project() {
     local proj=$1
+    test $proj != tumbleweed || proj=tw
     local path=${paths[${proj}]}
     test "$path" != "" || (
         >&2 echo "Unknown project $proj, expected one of";
@@ -171,7 +176,7 @@ function print_project_if_needed() {
     name=${name//-/+}
 
     if test -n "$last_modified_url"; then
-        echo -n "test \$(cat \"$cachefile\" 2>/dev/null) == \$(curl -s $last_modified_url?project=$name | tee $cachefile ) || "
+        echo -n "test \"\$(cat '$cachefile' 2>/dev/null)\" == \"\$(curl -s '$last_modified_url?project=$name' | tee '$cachefile' )\" || "
     fi
     print_project "$@"
 }

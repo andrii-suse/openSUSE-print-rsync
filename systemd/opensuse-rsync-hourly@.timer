@@ -1,0 +1,13 @@
+[Unit]
+Description=Sync openSUSE project %i every hour.
+
+[Timer]
+OnUnitInactiveSec=1hour
+OnActiveSec=1sec
+OnStartupSec=30sec
+AccuracySec=1sec
+RandomizedDelaySec=10sec
+Unit=opensuse-rsync@%i.service
+
+[Install]
+WantedBy=timers.target
