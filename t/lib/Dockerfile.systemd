@@ -1,0 +1,10 @@
+FROM opensuse/leap
+ENV container docker
+
+ENV LANG en_US.UTF-8
+
+RUN zypper -vvv -n in make systemd vim rsync
+
+WORKDIR /opt/project
+
+ENTRYPOINT ["/usr/lib/systemd/systemd"]

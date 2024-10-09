@@ -1,0 +1,10 @@
+[Unit]
+Description=Sync openSUSE project %i once a day.
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+Unit=opensuse-rsync@%i.service
+
+[Install]
+WantedBy=timers.target

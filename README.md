@@ -1,7 +1,7 @@
 # openSUSE-rsync
 -----------------------
 
-openSUSE-rsync will generate rsync commands to sync openSUSE repositories
+openSUSE-rsync provides systemd services to sync openSUSE repositories to mirrors
 
 ## Motivation
 
@@ -17,39 +17,56 @@ The purpose of opensuse-rsync:
 - Use cache file for each project to skip sync if api shows nothing was published;
 - Potentially define a common way for syncing openSUSE mirrors and intergrate with MirrorCache.
 
-## Synopsis - preview commands
+## Synopsis
 
 ```
-# choose which projects to sync
-echo PROJECT_SLOWROLL_ISO=1 >> /etc/opensuse-rsync.env
-echo PROJECT_TUMBLEWEED_ISO=0 >> /etc/opensuse-rsync.env
-echo PROJECT_LEAP_156_UPDATE=1 >> /etc/opensuse-rsync.env
+# alternatively use opensuse-rsync-typical or opensuse-rsync-big
+# or opensuse-rsync-huge or opensuse-rsync-everything
+zypper in opensuse-rsync-minimal
 
-# choose US mirror to sync from instead of default one
-echo RSYNC_ADDRESS=rsync://provo-mirror.opensuse.org/opensuse/ >> /etc/opensuse-rsync.env
+# preview which timers will be enabled according to the installed package
+opensuse-rsync-timers-enabled --dry
 
-# preview the generated commands for tw-iso project
-opensuse-rsync-print-project tw-iso
+# preview which timers will be enabled according to the installed package and disk usage required
+opensuse-rsync-timers-enabled --dry --preview
 
-# preview the generated commands for tw-repo project with dest folder ~/srv and additional rsync parameter
-OPENSUSE_RSYNC_EXTRA_PARAMS='--max-size=4k' opensuse-rsync-print-project tw-iso ~/srv
+# enable timers according to the installed package
+opensuse-rsync-timers-enabled
 
-# preview the generated commands for syncing all projects as defined in the config file
-OPENSUSE_RSYNC_EXTRA_PARAMS='--max-size=4k' opensuse-rsync-print ~/srv
+# customize host to sync from
+echo OPENSUSE_RSYNC_ADDRESS=rsync://provo-mirror.opensuse.org/opensuse/ >> /etc/opensuse-rsync.env
+echo "OPENSUSE_RSYNC_EXTRA_PARAMS='--max-size=4k'" >> /etc/opensuse-rsync.env
+
+opensuse-rsync-timers-disable
 ```
 
-## Synopsis - execute commands
+## Approximate expected disk usage
 
-```
+- minimal: 212G
+- typical: 1.2T
+- big: 1.8T
+- huge: 36T
+- everything: 38T
 
-# use user "mirror" to execute the generated commands
-OPENSUSE_RSYNC_EXTRA_PARAMS='--max-size=4k' opensuse-rsync-print /srv/opensuse | sudo -eu mirror bash
 
-```
+## How it works
+
+- package opensuse-rsync provides the scripts and systemd services and timers;
+- packages opensuse-rsync-* minimal, typical, big, huge, everything are munually exclusive;
+- script opensuse-rsync-timers-enable detects the desired layout according to installed packages and enables corresponding systemd timers (one per project);
+- the timers call corresponding systemd units;
+- the units check if anything changed in corresponding project and trigger rsync if needed;
+- the sync is started and the files should be delivered to /srv/opensuse/
+
+## TODO
+
+- report expected disk usage according to enabled projects and stats at https://download.opensuse.org/app/project;
+- customize destination (currently hardcoded /srv/opensuse);
+- deb package.
 
 ## Project status
 
-2024 Aug - initial alpha version, waiting for feedback
+2024 Oct - initial alpha version
 
 ## How to report issues or ask questions:
 
